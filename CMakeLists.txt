@@ -20,11 +20,11 @@ target_link_libraries(${PROJECT_NAME} FLGL)
 
 find_library(FFTW
              NAMES fftw3
-             HINTS lib/fftw/bin
+             HINTS lib/fftw/bin/
              NO_DEFAULT_PATH)
 
-if(FFTW_LIBRARY)
-    target_link_libraries(${PROJECT_NAME} ${FFTW_LIBRARY})
+if(FFTW)
+    target_link_libraries(${PROJECT_NAME} ${FFTW})
 else()
     message(FATAL_ERROR "FFTW library not found")
 endif()
