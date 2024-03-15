@@ -8,8 +8,9 @@ add_subdirectory(lib/flgl)
 
 include_directories(${PROJECT_SOURCE_DIR}/lib/flgl/inc)
 include_directories(${PROJECT_SOURCE_DIR}/lib/fftw/inc)
+include_directories(${PROJECT_SOURCE_DIR}/lib/sw)
 
-file(GLOB_RECURSE PROJECT_SOURCES "src/*.cpp")
+file(GLOB_RECURSE PROJECT_SOURCES "lib/sw/*.cpp" "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES

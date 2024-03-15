@@ -1,3 +1,6 @@
 [submodule "lib/flgl"]
 	path = lib/flgl
 	url = https://github.com/collebrusco/flgl
+[submodule "lib/sw"]
+	path = lib/sw
+	url = https://github.com/collebrusco/stopwatch
