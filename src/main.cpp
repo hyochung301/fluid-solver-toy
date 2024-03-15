@@ -1,19 +1,31 @@
 #include <fftw3.h>
+#include <cmath>
 
-static rfftwnd_plan plan_rc, plan_cr;
+static fftw_plan plan_rc, plan_cr;
+static fftw_complex *in, *out;
 
-static void initFFT ( int n )
-{
-	plan_rc = rfftw2d_create_plan ( n, n, FFTW_REAL_TO_COMPLEX, FFTW_IN_PLACE );
+static void initFFT(int n) {
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n * n);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n * n);
 
-	plan_cr = rfftw2d_create_plan ( n, n, FFTW_COMPLEX_TO_REAL, FFTW_IN_PLACE );
+    plan_rc = fftw_plan_dft_2d(n, n, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+    plan_cr = fftw_plan_dft_2d(n, n, in, out, FFTW_BACKWARD, FFTW_ESTIMATE);
+}
+
+static void destroyFFT() {
+	fftw_destroy_plan(plan_rc);
+    fftw_destroy_plan(plan_cr);
+    fftw_free(in);
+    fftw_free(out);
+    fftw_cleanup();
 }
 
 #define FFT(s,u) \
-if (s==1) rfftwnd_one_real_to_complex( plan_rc, (fftw_real *)u, (fftw_complex *)u ); \
-else rfftwnd_one_complex_to_real( plan_cr, (fftw_complex *)u, (fftw_real *)u ); 
+if (s==1) fftw_execute(plan_rc); \
+else fftw_execute(plan_cr);
 
 #define floor(x) ((x)>=0.0?((int)(x)):(-((int)(1-(x)))))
+
 
 void stable_solve(int n, float* u, float* v, float* u0, float* v0, float visc, float dt)
 {
@@ -77,5 +89,7 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float visc, f
 
 
 int main() {
+	initFFT(512);
+	destroyFFT();
 	return 0;
 }
