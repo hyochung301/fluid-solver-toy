@@ -1,0 +1,3 @@
+[submodule "lib/flgl"]
+	path = lib/flgl
+	url = https://github.com/collebrusco/flgl
