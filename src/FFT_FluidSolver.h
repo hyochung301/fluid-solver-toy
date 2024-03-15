@@ -25,13 +25,24 @@ private:
                            float const& visc, float const& dt);
 public:
     float const& viscosity;
+    int const& dim();
 
     StamFFT_FluidSolver(int const& N);
     ~StamFFT_FluidSolver();
 
-    void fill_random(int mag);
+    void random_fill(float mag);
 
+    float* buff();
+    float* x_buffer();
+    float* y_buffer();
 
+    void add_force(int x, int y, int fx, int fy);
+    void set_force(int x, int y, int fx, int fy);
+    void get_force(int x, int y, int& fx, int& fy);
+
+    void step(float const& dt);
+
+    void slow_fill_pixbuff();
 
 };
 
