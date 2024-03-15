@@ -63,10 +63,10 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float const& 
 
 	// add force fields to velo fields
 	// then make force fields equal velo field
-	for (i = 0; i < n*n; i++) {
-		u[i] += dt*u0[i]; u0[i] = u[i];
-		v[i] += dt*v0[i]; v0[i] = v[i];
-	}
+	// for (i = 0; i < n*n; i++) {
+	// 	u[i] += dt*u0[i]; u0[i] = u[i];
+	// 	v[i] += dt*v0[i]; v0[i] = v[i];
+	// }
 
 	ls("after force", n, u, v);
 
@@ -196,25 +196,25 @@ struct Field {
 				int g = 2*(i+j*n) + 1;
 				buffer[r] = u[i+j*n];
 				buffer[g] = v[i+j*n];
-				// buffer[r] = x*x+y*y>50*50?1.:0.;
-				// buffer[g] = x*x+y*y>50*50?1.:0.;
-				if (buffer[r]>buffmax) buffmax = buffer[r];
-				if (buffer[g]>buffmax) buffmax = buffer[g];
-				if (buffer[r]<buffmin) buffmin = buffer[r];
-				if (buffer[g]<buffmin) buffmin = buffer[g];
+				buffer[r] = x*x+y*y>50*50?1.:0.;
+				buffer[g] = x*x+y*y>50*50?1.:0.;
+				// if (buffer[r]>buffmax) buffmax = buffer[r];
+				// if (buffer[g]>buffmax) buffmax = buffer[g];
+				// if (buffer[r]<buffmin) buffmin = buffer[r];
+				// if (buffer[g]<buffmin) buffmin = buffer[g];
 			}
 		}
 		LOG_DBG("buffmax: %E",buffmax);
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				int r = 2*(i+j*n);
-				int g = 2*(i+j*n) + 1;
-				float imag = (1.f / ((buffmax-buffmin)==0.?1.f:(buffmax-buffmin)));
-				buffer[r] -= buffmin; buffer[r] *= imag;
-				buffer[g] -= buffmin; buffer[g] *= imag;
-			}
-		}
-		stable_solve(n, u, v, u0, v0, visc, dt);
+		// for (int i = 0; i < n; i++) {
+		// 	for (int j = 0; j < n; j++) {
+		// 		int r = 2*(i+j*n);
+		// 		int g = 2*(i+j*n) + 1;
+		// 		float imag = (1.f / ((buffmax-buffmin)==0.?1.f:(buffmax-buffmin)));
+		// 		buffer[r] -= buffmin; buffer[r] *= imag;
+		// 		buffer[g] -= buffmin; buffer[g] *= imag;
+		// 	}
+		// }
+		// stable_solve(n, u, v, u0, v0, visc, dt);
 		ls("buffer", n, buffer, buffer);
 	}
 
