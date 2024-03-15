@@ -24,13 +24,14 @@ private:
                            float* const u0, float* const v0, 
                            float const& visc, float const& dt);
 public:
-    float const& viscosity;
+    float & viscosity;
     int const& dim();
 
     StamFFT_FluidSolver(int const& N);
     ~StamFFT_FluidSolver();
 
     void random_fill(float mag);
+    void zero_field();
 
     float* buff();
     float* x_buffer();

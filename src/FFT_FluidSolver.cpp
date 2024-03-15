@@ -82,6 +82,11 @@ void StamFFT_FluidSolver::random_fill(float mag) {
     }
 }
 
+void StamFFT_FluidSolver::zero_field() {
+    memset(u,0,sizeof(float)*n*n);
+    memset(v,0,sizeof(float)*n*n);
+}
+
 void StamFFT_FluidSolver::slow_fill_pixbuff() {
 	float buffmax = -9999999.f;
 	float buffmin = 9999999.f;

@@ -38,7 +38,7 @@ struct Field {
 			auto delta = mouse_delta();
 
 			for (auto pt : Stepper(start.x, start.y, end.x, end.y)) {
-				solver.set_force(pt.x, pt.y, delta.x * 20., delta.y * 20.);
+				solver.set_force(pt.x, pt.y, delta.x * 33., delta.y * 33.);
 			}
 		}
 		solver.step(dt);
@@ -60,7 +60,7 @@ struct FieldRenderer {
 		field_shad = Shader::from_source("passthrough_vert", "tex");
 		field_tex.create();
 		field_tex.bind();
-		field_tex.pixelate(true);
+		field_tex.pixelate(false);
     	field_tex.unbind();
 	}
 	void buffer_texture() {
@@ -80,14 +80,15 @@ struct FieldRenderer {
 	}
 };
 
-static FieldRenderer renderer(128);
+static FieldRenderer renderer(256);
 
 class flog {
+	std::string name;
 	const unsigned int N;
 	float * buff;
 	unsigned int i;
 public:
-	flog(unsigned int n) : N(n) {
+	flog(unsigned int n, std::string && nam) : N(n), name(nam) {
 		buff = new float[N]; i = 0;
 	}
 	~flog() {
@@ -98,7 +99,7 @@ public:
 		for (int j = 0; j < N; j++) {
 			a += buff[j];
 		}
-		LOG_DBG("solver avg: %.1fus", a/N);
+		LOG_DBG(name + " rolling avg time: %.1fus", a/N);
 	}
 	void dump(float v) {
 		buff[i++] = v;
@@ -118,19 +119,37 @@ int main() {
 	timer.start();	
 	Stopwatch dtimer(SECONDS);
 	dtimer.start();
-	flog db(128);		
-	renderer.field.solver.random_fill(10.);
+	flog sv(256, "solver");	
+	flog rd(256, "render");		
+	renderer.field.solver.random_fill(400.);
+	bool slowmo = false;
 	while (!window.should_close()) {
-		// if (window.keyboard[GLFW_KEY_SPACE].pressed) {
-			auto st = timer.read(MICROSECONDS);
-			renderer.field.step(dtimer.stop_reset_start());
-			renderer.field.solver.slow_fill_pixbuff();
-			auto en = timer.read(MICROSECONDS);
-			db.dump(en-st);
 
-			renderer.buffer_texture();
-		// }
+		if (window.keyboard[GLFW_KEY_R].down)
+			renderer.field.solver.random_fill(400.);
+		if (window.keyboard[GLFW_KEY_S].pressed)
+			slowmo = !slowmo;
+		if (window.keyboard[GLFW_KEY_0].pressed)
+			renderer.field.solver.zero_field();
+		if (window.keyboard[GLFW_KEY_UP].pressed) {
+			renderer.field.solver.viscosity *= 2.; LOG_DBG("viscosity: %e", renderer.field.solver.viscosity);
+		}
+		if (window.keyboard[GLFW_KEY_DOWN].pressed) {
+			renderer.field.solver.viscosity /= 2.; LOG_DBG("viscosity: %e", renderer.field.solver.viscosity);
+		}
+
+		auto st = timer.read(MICROSECONDS);
+		renderer.field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
+		renderer.field.solver.slow_fill_pixbuff();
+		auto en = timer.read(MICROSECONDS);
+		sv.dump(en-st);
+
+		st = timer.read(MICROSECONDS);
+		renderer.buffer_texture();
 		renderer.render();
+		en = timer.read(MICROSECONDS);
+		rd.dump(en-st);
+
 		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
 		window.update();
 	}

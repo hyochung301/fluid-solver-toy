@@ -1,7 +1,11 @@
 # fft fluid solver gfx demo
+### Controls
+* Click and drag to swirl fluid around
+* Press up/down to double/halve viscosity   
+* Press R to randomize velocity field
+* Press S to toggle slow motion mode
+* Press 0 to zero velocity field
 
-Click and drag to swirl fluid around.
-     
 I've been wanting to learn how these kinds of fluid sims work and of course the rabbit hole is deep. (computational fluid dynamics is complicated -- really?)      
 I found [this paper by Jos Stam (2001)](https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/jgt01.pdf) that details a "simple" and "good for beginners" FFT-based technique. 
 
