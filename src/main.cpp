@@ -6,6 +6,7 @@
 #include <Stopwatch.h>
 #include <random>
 LOG_MODULE(main);
+using namespace glm;
 
 /*
 	solver: https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/jgt01.pdf
@@ -14,7 +15,7 @@ LOG_MODULE(main);
 
 static fftwf_plan forward_u, forward_v, inv_u, inv_v;
 static fftwf_complex *in, *out;
-#define n_g (128)
+#define n_g (256)
 
 static void initFFT(int N, float* u, float* v) {
     forward_u = fftwf_plan_dft_r2c_2d(n_g, n_g, u, (fftwf_complex*)u, FFTW_ESTIMATE);
@@ -108,8 +109,6 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float const& 
             	u[i+n*j] = f*u0[i+(n+2)*j]; v[i+n*j] = f*v0[i+(n+2)*j]; 
     	}
 
-    // memcpy(u, u0,sizeof(float)*n*n);
-    // memcpy(v, v0,sizeof(float)*n*n);
     memset(u0,0,sizeof(float)*n*n);
     memset(v0,0,sizeof(float)*n*n);
 
@@ -143,8 +142,18 @@ struct Field {
 		delete [] buffer;
 	}
 
+	ivec2 mouse_pos() {
+		vec2 const& mp = window.mouse.pos;
+		ivec2 const& f = window.frame;
+		return ivec2 {((mp.x / (float)f.x)) * n, ((mp.y / (float)f.y)) * n};
+	}
+	ivec2 mouse_delta() {
+		vec2 const& md = window.mouse.delta;
+		ivec2 const& f = window.frame;
+		return ivec2 {((int)(md.x / (float)f.x)) * n, ((int)(md.y / (float)f.y)) * n};
+	}
+
 	void step(float dt) {
-		LOG_DBG("dt=%E",dt);
 		stable_solve(n, u, v, u0, v0, visc, dt);
 		float buffmax = -9999999.f;
 		float buffmin = 9999999.f;
@@ -156,15 +165,12 @@ struct Field {
 				int g = 2*(i+j*n) + 1;
 				buffer[r] = u[i+j*n];
 				buffer[g] = v[i+j*n];
-				// buffer[r] = x*x+y*y>50*50?1.:0.;
-				// buffer[g] = x*x+y*y>50*50?1.:0.;
 				if (buffer[r]>buffmax) buffmax = buffer[r];
 				if (buffer[g]>buffmax) buffmax = buffer[g];
 				if (buffer[r]<buffmin) buffmin = buffer[r];
 				if (buffer[g]<buffmin) buffmin = buffer[g];
 			}
 		}
-		LOG_DBG("buffmax: %E",buffmax);
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
 				int r = 2*(i+j*n);
@@ -186,13 +192,13 @@ struct FieldRenderer {
 	const int n;
 	Field field;
 
-	FieldRenderer(int const& N) : n(N), field(N, 0.001f) {}
+	FieldRenderer(int const& N) : n(N), field(N, 0.0001f) {}
 	void init() {
 		quad = DefaultMeshes::tile<Vt_classic>();
 		field_shad = Shader::from_source("passthrough_vert", "tex");
 		field_tex.create();
 		field_tex.bind();
-		field_tex.pixelate();
+		field_tex.pixelate(true);
     	field_tex.unbind();
 	}
 	void buffer_texture() {
@@ -214,6 +220,33 @@ struct FieldRenderer {
 
 static FieldRenderer renderer(n_g);
 
+class flog {
+	const unsigned int N;
+	float * buff;
+	unsigned int i;
+public:
+	flog(unsigned int n) : N(n) {
+		buff = new float[N]; i = 0;
+	}
+	~flog() {
+		delete [] buff;
+	}
+	void outavg() {
+		float a = 0.;
+		for (int j = 0; j < N; j++) {
+			a += buff[j];
+		}
+		LOG_DBG("flog avg: %.1f", a/N);
+	}
+	void dump(float v) {
+		buff[i++] = v;
+		if (!(i < N)) {
+			i = 0;
+			outavg();
+		}
+	}
+};
+
 int main() {
 	initFFT(n_g, renderer.field.u0, renderer.field.v0);
 	gl.init();
@@ -221,12 +254,18 @@ int main() {
 	renderer.init();
 	Stopwatch timer(SECONDS);
 	renderer.buffer_texture();
-	timer.start();			
+	timer.start();	
+	flog db(128);		
 	while (!window.should_close()) {
 		// if (window.keyboard[GLFW_KEY_SPACE].pressed) {
-			renderer.field.step(0.5f);
+			auto st = timer.read(MICROSECONDS);
+			renderer.field.step(0.1f);
+			auto en = timer.read(MICROSECONDS);
+			db.dump(en-st);
 			renderer.buffer_texture();
 		// }
+		auto mp = renderer.field.mouse_pos();
+		// LOG_DBG("mouse pos: %d,%d", mp.x,mp.y);
 		renderer.render();
 		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
 		window.update();
