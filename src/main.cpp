@@ -128,7 +128,7 @@ struct Field {
 		buffer = new float[n*n*2];
 		std::random_device rd;
 	    std::mt19937 gen(rd());
-	    std::uniform_real_distribution<> dis(-2., 2.);
+	    std::uniform_real_distribution<> dis(-10000000., 10000000.);
 		for (int i = 0; i < n_g; i++) {
 			for (int j = 0; j < n_g; j++) {
 				u0[i+j*n] = dis(gen); v0[i+j*n] = dis(gen);
@@ -164,8 +164,8 @@ struct Field {
 			auto delta = mouse_delta();
 
 			for (auto pt : Stepper(start.x, start.y, end.x, end.y)) {
-				u0[pt.x+pt.y*n] = delta.x * 1.;
-				v0[pt.x+pt.y*n] = delta.y * 1.;
+				u0[pt.x+pt.y*n] = delta.x * 20.;
+				v0[pt.x+pt.y*n] = delta.y * 20.;
 			}
 		}
 
@@ -251,7 +251,7 @@ public:
 		for (int j = 0; j < N; j++) {
 			a += buff[j];
 		}
-		LOG_DBG("flog avg: %.1f", a/N);
+		LOG_DBG("solver avg: %.1fus", a/N);
 	}
 	void dump(float v) {
 		buff[i++] = v;
@@ -270,11 +270,13 @@ int main() {
 	Stopwatch timer(SECONDS);
 	renderer.buffer_texture();
 	timer.start();	
+	Stopwatch dtimer(SECONDS);
+	dtimer.start();
 	flog db(128);		
 	while (!window.should_close()) {
 		// if (window.keyboard[GLFW_KEY_SPACE].pressed) {
 			auto st = timer.read(MICROSECONDS);
-			renderer.field.step(0.1f);
+			renderer.field.step(dtimer.stop_reset_start());
 			auto en = timer.read(MICROSECONDS);
 			db.dump(en-st);
 			renderer.buffer_texture();
