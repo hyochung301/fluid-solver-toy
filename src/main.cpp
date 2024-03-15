@@ -17,10 +17,10 @@ static fftwf_complex *in, *out;
 #define n_g (128)
 
 static void initFFT(int N, float* u, float* v) {
-    forward_u = fftwf_plan_dft_2d(n_g, n_g, (fftwf_complex*)u, (fftwf_complex*)u, FFTW_FORWARD, FFTW_ESTIMATE);
-    forward_v = fftwf_plan_dft_2d(n_g, n_g, (fftwf_complex*)v, (fftwf_complex*)v, FFTW_FORWARD, FFTW_ESTIMATE);
-    inv_u = 	fftwf_plan_dft_2d(n_g, n_g, (fftwf_complex*)v, (fftwf_complex*)v, FFTW_BACKWARD, FFTW_ESTIMATE);
-    inv_v = 	fftwf_plan_dft_2d(n_g, n_g, (fftwf_complex*)v, (fftwf_complex*)v, FFTW_BACKWARD, FFTW_ESTIMATE);
+    forward_u = fftwf_plan_dft_r2c_2d(n_g, n_g, u, (fftwf_complex*)u, FFTW_ESTIMATE);
+    forward_v = fftwf_plan_dft_r2c_2d(n_g, n_g, v, (fftwf_complex*)v, FFTW_ESTIMATE);
+    inv_u = 	fftwf_plan_dft_c2r_2d(n_g, n_g, (fftwf_complex*)v, v, FFTW_ESTIMATE);
+    inv_v = 	fftwf_plan_dft_c2r_2d(n_g, n_g, (fftwf_complex*)v, v, FFTW_ESTIMATE);
 }
 
 static void destroyFFT() {
@@ -37,10 +37,10 @@ void log_sum(int n, float* u, float* v) {
 	float su = 0, sv = 0;
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
-			su += 1000.f*(u[i+j*n]); sv += 1000.f*(v[i+j*n]);
+			su += (u[i+j*n]); sv += (v[i+j*n]);
 		}
 	}
-	LOG_DBG("sum: %E, %E",su,sv);
+	LOG_DBG("\tsum: %E, %E",su,sv);
 }
 #define ls(msg, n, u, v) LOG_DBG(msg); log_sum(n, u, v);
 
@@ -63,10 +63,10 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float const& 
 
 	// add force fields to velo fields
 	// then make force fields equal velo field
-	// for (i = 0; i < n*n; i++) {
-	// 	u[i] += dt*u0[i]; u0[i] = u[i];
-	// 	v[i] += dt*v0[i]; v0[i] = v[i];
-	// }
+	for (i = 0; i < n*n; i++) {
+		u[i] += dt*u0[i]; u0[i] = u[i];
+		v[i] += dt*v0[i]; v0[i] = v[i];
+	}
 
 	ls("after force", n, u, v);
 
@@ -84,20 +84,22 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float const& 
 		The interpolation is very easy to implement because our grids are periodic. 
 		Points that leave the grid simply reenter the grid from the opposite side."
 	*/
-	// for (x=0.5/n, i=0; i < n; i++, x+=1.0/n) {
-	// 	for (y=0.5/n, j=0; j < n; j++, y+=1.0/n) {
-	// 		x0 = n*(x-dt*u0[i+n*j]) - 0.5;
-	// 		y0 = n*(y-dt*v0[i+n*j]) - 0.5;
-	// 		i0 = floor(x0); s = x0-i0; i0 = (n+(i0%n))%n; i1 = (i0+1)%n;
-	// 		j0 = floor(y0); t = y0-j0; j0 = (n+(j0%n))%n; j1 = (j0+1)%n;
-	// 		u[i+n*j] = ((1-s) * ( ((1-t) * u0[i0+n*j0]) + (t*u0[i0+n*j1]) )) + 
-	// 					  (s  * ( ((1-t) * u0[i1+n*j0]) + (t*u0[i1+n*j1]) ));
-	// 		v[i+n*j] = ((1-s) * ( ((1-t) * v0[i0+n*j0]) + (t*v0[i0+n*j1]) )) + 
-	// 					  (s  * ( ((1-t) * v0[i1+n*j0]) + (t*v0[i1+n*j1]) ));
-	// 		if ((i == 6) || u[i+n*j] != 0.0 || v[i+n*j] != 0.0) 
-	// 			LOG_DBG("%f", t);
-	// 	}
-	// }
+	for (x=0.5/n, i=0; i < n; i++, x+=1.0/n) {
+		for (y=0.5/n, j=0; j < n; j++, y+=1.0/n) {
+			x0 = n*(x-dt*u0[i+n*j]) - 0.5;
+			y0 = n*(y-dt*v0[i+n*j]) - 0.5;
+			i0 = floor(x0); s = x0-i0; i0 = (n+(i0%n))%n; i1 = (i0+1)%n;
+			j0 = floor(y0); t = y0-j0; j0 = (n+(j0%n))%n; j1 = (j0+1)%n;
+			u[i+n*j] = ((1-s) * ( ((1-t) * u0[i0+n*j0]) + (t*u0[i0+n*j1]) )) + 
+						  (s  * ( ((1-t) * u0[i1+n*j0]) + (t*u0[i1+n*j1]) ));
+			v[i+n*j] = ((1-s) * ( ((1-t) * v0[i0+n*j0]) + (t*v0[i0+n*j1]) )) + 
+						  (s  * ( ((1-t) * v0[i1+n*j0]) + (t*v0[i1+n*j1]) ));
+			// if ((i == 6) || u[i+n*j] != 0.0 || v[i+n*j] != 0.0) 
+			// 	LOG_DBG("%f", t);
+			// u[i+n*j] = u0[i+n*j];
+			// v[i+n*j] = v0[i+n*j];
+		}
+	}
 
 	ls("after self advec", n, u, v);
 
@@ -145,13 +147,15 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float const& 
 
 	// normalize 
 	f = 1.0/(n*n);
-	LOG_DBG("f: %E", f);
 	for (i = 0; i < n; i++) {
 		for (j = 0; j < n; j++) {
 			u[i+n*j] = f*u0[i+(n+2)*j];
 			v[i+n*j] = f*v0[i+(n+2)*j];
 		}
 	}
+
+	memset(u0, 0x00, n*(n+2)*sizeof(float));
+	memset(v0, 0x00, n*(n+2)*sizeof(float));
 
 	ls("returning", n, u, v);
 }
@@ -169,7 +173,7 @@ struct Field {
 		buffer = new float[n*n*2];
 		std::random_device rd;
 	    std::mt19937 gen(rd());
-	    std::uniform_real_distribution<> dis(-1, 1);
+	    std::uniform_real_distribution<> dis(-2., 2.);
 		for (int i = 0; i < n_g; i++) {
 			for (int j = 0; j < n_g; j++) {
 				u0[i+j*n] = dis(gen); v0[i+j*n] = dis(gen);
@@ -185,7 +189,8 @@ struct Field {
 	}
 
 	void step(float dt) {
-		LOG_DBG("dt=%f",dt);
+		LOG_DBG("dt=%E",dt);
+		stable_solve(n, u, v, u0, v0, visc, dt);
 		float buffmax = -9999999.f;
 		float buffmin = 9999999.f;
 		for (int i = 0; i < n; i++) {
@@ -196,26 +201,24 @@ struct Field {
 				int g = 2*(i+j*n) + 1;
 				buffer[r] = u[i+j*n];
 				buffer[g] = v[i+j*n];
-				buffer[r] = x*x+y*y>50*50?1.:0.;
-				buffer[g] = x*x+y*y>50*50?1.:0.;
-				// if (buffer[r]>buffmax) buffmax = buffer[r];
-				// if (buffer[g]>buffmax) buffmax = buffer[g];
-				// if (buffer[r]<buffmin) buffmin = buffer[r];
-				// if (buffer[g]<buffmin) buffmin = buffer[g];
+				// buffer[r] = x*x+y*y>50*50?1.:0.;
+				// buffer[g] = x*x+y*y>50*50?1.:0.;
+				if (buffer[r]>buffmax) buffmax = buffer[r];
+				if (buffer[g]>buffmax) buffmax = buffer[g];
+				if (buffer[r]<buffmin) buffmin = buffer[r];
+				if (buffer[g]<buffmin) buffmin = buffer[g];
 			}
 		}
 		LOG_DBG("buffmax: %E",buffmax);
-		// for (int i = 0; i < n; i++) {
-		// 	for (int j = 0; j < n; j++) {
-		// 		int r = 2*(i+j*n);
-		// 		int g = 2*(i+j*n) + 1;
-		// 		float imag = (1.f / ((buffmax-buffmin)==0.?1.f:(buffmax-buffmin)));
-		// 		buffer[r] -= buffmin; buffer[r] *= imag;
-		// 		buffer[g] -= buffmin; buffer[g] *= imag;
-		// 	}
-		// }
-		// stable_solve(n, u, v, u0, v0, visc, dt);
-		ls("buffer", n, buffer, buffer);
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				int r = 2*(i+j*n);
+				int g = 2*(i+j*n) + 1;
+				float imag = (1.f / ((buffmax-buffmin)==0.?1.f:(buffmax-buffmin)));
+				buffer[r] -= buffmin; buffer[r] *= imag;
+				buffer[g] -= buffmin; buffer[g] *= imag;
+			}
+		}
 	}
 
 	float* buff() {return buffer;}
@@ -228,7 +231,7 @@ struct FieldRenderer {
 	const int n;
 	Field field;
 
-	FieldRenderer(int const& N) : n(N), field(N, 10.f) {}
+	FieldRenderer(int const& N) : n(N), field(N, 0.001f) {}
 	void init() {
 		quad = DefaultMeshes::tile<Vt_classic>();
 		field_shad = Shader::from_source("passthrough_vert", "tex");
@@ -266,7 +269,7 @@ int main() {
 	timer.start();			
 	while (!window.should_close()) {
 		if (window.keyboard[GLFW_KEY_SPACE].pressed) {
-			renderer.field.step(0.000001f);
+			renderer.field.step(1.f);
 			renderer.buffer_texture();
 		}
 		renderer.render();
