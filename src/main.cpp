@@ -5,6 +5,7 @@
 #include <flgl/logger.h>
 #include <Stopwatch.h>
 #include <random>
+#include "Stepper.h"
 LOG_MODULE(main);
 using namespace glm;
 
@@ -143,17 +144,31 @@ struct Field {
 	}
 
 	ivec2 mouse_pos() {
-		vec2 const& mp = window.mouse.pos;
+		vec2 mp = window.mouse.pos;
 		ivec2 const& f = window.frame;
+		mp.y = ((float)f.y) - mp.y;
 		return ivec2 {((mp.x / (float)f.x)) * n, ((mp.y / (float)f.y)) * n};
 	}
 	ivec2 mouse_delta() {
-		vec2 const& md = window.mouse.delta;
+		vec2 md = window.mouse.delta;
+		md.y *= -1.;
 		ivec2 const& f = window.frame;
-		return ivec2 {((int)(md.x / (float)f.x)) * n, ((int)(md.y / (float)f.y)) * n};
+		ivec2 r = ivec2 {((md.x / (float)f.x)) * n, ((md.y / (float)f.y)) * n};
+		return r;
 	}
 
 	void step(float dt) {
+		if (window.mouse.left.down) {
+			auto end   = mouse_pos();
+			auto start = mouse_pos() - mouse_delta();
+			auto delta = mouse_delta();
+
+			for (auto pt : Stepper(start.x, start.y, end.x, end.y)) {
+				u0[pt.x+pt.y*n] = delta.x * 1.;
+				v0[pt.x+pt.y*n] = delta.y * 1.;
+			}
+		}
+
 		stable_solve(n, u, v, u0, v0, visc, dt);
 		float buffmax = -9999999.f;
 		float buffmin = 9999999.f;
