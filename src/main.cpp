@@ -19,7 +19,7 @@ static fftwf_complex *in, *out;
 static void initFFT(int N, float* u, float* v) {
     forward_u = fftwf_plan_dft_r2c_2d(n_g, n_g, u, (fftwf_complex*)u, FFTW_ESTIMATE);
     forward_v = fftwf_plan_dft_r2c_2d(n_g, n_g, v, (fftwf_complex*)v, FFTW_ESTIMATE);
-    inv_u = 	fftwf_plan_dft_c2r_2d(n_g, n_g, (fftwf_complex*)v, v, FFTW_ESTIMATE);
+    inv_u = 	fftwf_plan_dft_c2r_2d(n_g, n_g, (fftwf_complex*)u, u, FFTW_ESTIMATE);
     inv_v = 	fftwf_plan_dft_c2r_2d(n_g, n_g, (fftwf_complex*)v, v, FFTW_ESTIMATE);
 }
 
@@ -43,6 +43,7 @@ void log_sum(int n, float* u, float* v) {
 	LOG_DBG("\tsum: %E, %E",su,sv);
 }
 #define ls(msg, n, u, v) LOG_DBG(msg); log_sum(n, u, v);
+
 
 /*
 	Inputs:
@@ -103,7 +104,15 @@ void stable_solve(int n, float* u, float* v, float* u0, float* v0, float const& 
     f = 1.0/(n*n);
     for ( i=0 ; i<n ; i++ )
         for ( j=0 ; j<n ; j++ )
-            { u[i+n*j] = f*u0[i+(n+2)*j]; v[i+n*j] = f*v0[i+(n+2)*j]; }
+        { 
+            	u[i+n*j] = f*u0[i+(n+2)*j]; v[i+n*j] = f*v0[i+(n+2)*j]; 
+    	}
+
+    // memcpy(u, u0,sizeof(float)*n*n);
+    // memcpy(v, v0,sizeof(float)*n*n);
+    memset(u0,0,sizeof(float)*n*n);
+    memset(v0,0,sizeof(float)*n*n);
+
 }
 
 struct Field {
@@ -214,10 +223,10 @@ int main() {
 	renderer.buffer_texture();
 	timer.start();			
 	while (!window.should_close()) {
-		if (window.keyboard[GLFW_KEY_SPACE].pressed) {
-			renderer.field.step(1.f);
+		// if (window.keyboard[GLFW_KEY_SPACE].pressed) {
+			renderer.field.step(0.5f);
 			renderer.buffer_texture();
-		}
+		// }
 		renderer.render();
 		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
 		window.update();
