@@ -1,17 +1,17 @@
-#include <srfftw.h>
+#include <fftw3.h>
 
-static rfftwnd plan plan rc, plan cr;
+static rfftwnd_plan plan_rc, plan_cr;
 
 static void initFFT ( int n )
 {
-	plan rc = rfftw2d_create_plan ( n, n, FFTW REAL TO COMPLEX, FFTW IN PLACE );
+	plan_rc = rfftw2d_create_plan ( n, n, FFTW_REAL_TO_COMPLEX, FFTW_IN_PLACE );
 
-	plan cr = rfftw2d_create_plan ( n, n, FFTW COMPLEX TO REAL, FFTW IN PLACE );
+	plan_cr = rfftw2d_create_plan ( n, n, FFTW_COMPLEX_TO_REAL, FFTW_IN_PLACE );
 }
 
 #define FFT(s,u) \
-if (s==1) rfftwnd one real to complex ( plan rc, (fftw real *)u, (fftw complex *)u ); \
-else rfftwnd one complex to real ( plan cr, (fftw complex *)u, (fftw real *)u ); 
+if (s==1) rfftwnd_one_real_to_complex( plan_rc, (fftw_real *)u, (fftw_complex *)u ); \
+else rfftwnd_one_complex_to_real( plan_cr, (fftw_complex *)u, (fftw_real *)u ); 
 
 #define floor(x) ((x)>=0.0?((int)(x)):(-((int)(1-(x)))))
 
