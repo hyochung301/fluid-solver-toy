@@ -5,7 +5,6 @@
 
 /*
     solver: https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/jgt01.pdf
-    in this file I try to render their implementation
 */
 
 class StamFFT_FluidSolver {
