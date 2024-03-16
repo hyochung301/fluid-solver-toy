@@ -87,7 +87,7 @@ void vecFieldRenderer::prepare() {
         	l *= 2;
         	l = max(l-0.1,0.);
         	vec *= l;
-            if (l<0.) continue;
+            if (l<=0.) continue;
 
             // Scale positions to [-1, 1]
             buffer[bufi].pos = glm::vec2(-1.0f + size * i, -1.0f + size * j);
