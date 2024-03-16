@@ -12,7 +12,9 @@ LOG_MODULE(fft_solver)
 // float visc;
 // float* buffer;
 
-StamFFT_FluidSolver::StamFFT_FluidSolver(int const& N) : n(N), viscosity(visc) {
+StamFFT_FluidSolver::StamFFT_FluidSolver(int const& N) : n(N), 
+                                                         viscosity(visc), 
+                                                         force_mul(1.) {
 	visc = 0.001;
     alloc_buffers();
     initFFT(n, u0, v0);
@@ -28,18 +30,26 @@ float* StamFFT_FluidSolver::y_buffer() const {return v;}
 int const& StamFFT_FluidSolver::dim() const {return n;}
 
 void StamFFT_FluidSolver::add_force(int x, int y, int fx, int fy) {
-	u0[x+y*n] += fx;
-	v0[x+y*n] += fy;
+	u0[x+y*n] += fx * force_mul;
+	v0[x+y*n] += fy * force_mul;
 }
 
 void StamFFT_FluidSolver::set_force(int x, int y, int fx, int fy) {
-	u0[x+y*n] = fx;
-	v0[x+y*n] = fy;
+	u0[x+y*n] = fx * force_mul;
+	v0[x+y*n] = fy * force_mul;
 }
 
 void StamFFT_FluidSolver::get_force(int x, int y, int& fx, int& fy) const {
-	fx = u0[x+y*n];
-	fy = v0[x+y*n];
+	fx = u0[x+y*n] / force_mul;
+	fy = v0[x+y*n] / force_mul;
+}
+
+void StamFFT_FluidSolver::set_force_multiplier(float mul) {
+    force_mul = mul;
+}
+
+float StamFFT_FluidSolver::force_multiplier() {
+    return force_mul;
 }
 
 void StamFFT_FluidSolver::initFFT(int const& N, float* u_buffer, float* v_buffer) {

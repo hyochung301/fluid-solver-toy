@@ -68,10 +68,7 @@ void vecFieldRenderer::init() {
 void vecFieldRenderer::prepare() {
 	#define COEFF_SCALE (80.0f)
 	const float size = 2.0f / (n - 1); // Calculate the size of each step in the grid
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0.8, 1.2);
-	const float coeff = dis(gen) * (COEFF_SCALE / (n - 1));
+	const float coeff = COEFF_SCALE / (n - 1);
     std::vector<uint32_t> indices;
     float* const u = field.solver.x_buffer();
     float* const v = field.solver.y_buffer();

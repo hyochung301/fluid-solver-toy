@@ -14,6 +14,7 @@ private:
     float* u, * v, * u0, * v0;
     float visc;
     float* buffer;
+    float force_mul;
 
     void initFFT(int const& N, float* u_buffer, float* v_buffer);
     void alloc_buffers();
@@ -40,6 +41,8 @@ public:
     void add_force(int x, int y, int fx, int fy);
     void set_force(int x, int y, int fx, int fy);
     void get_force(int x, int y, int& fx, int& fy) const;
+    void set_force_multiplier(float mul);
+    float force_multiplier();
 
     void step(float const& dt);
 

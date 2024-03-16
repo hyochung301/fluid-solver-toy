@@ -45,7 +45,7 @@ public:
 	}
 };
 
-static void explode(int x0, int y0, int r, float scale=20000.) {
+static void explode(int x0, int y0, int r, float force=20000.) {
 	const float mag = 1000.;
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -56,8 +56,8 @@ static void explode(int x0, int y0, int r, float scale=20000.) {
 			int dx = x-x0;
 			if (dx*dx+dy*dy <= r*r) {
 				int dx = x-x0; int dy = y-y0;
-				float fx = dx * (scale/(dx*dx+dy*dy)); 
-				float fy = dy * (scale/(dx*dx+dy*dy));
+				float fx = dx * (force/(dx*dx+dy*dy)) * field.solver.force_multiplier(); 
+				float fy = dy * (force/(dx*dx+dy*dy)) * field.solver.force_multiplier();
 				field.solver.add_force(x,y, fx,fy);
 			}
 		}
@@ -88,8 +88,10 @@ int main() {
 
 		if (window.keyboard[GLFW_KEY_R].down)
 			field.solver.random_fill(400.);
-		if (window.keyboard[GLFW_KEY_S].pressed)
+		if (window.keyboard[GLFW_KEY_S].pressed) {
 			slowmo = !slowmo;
+			field.solver.set_force_multiplier(1. + ((float)(slowmo*9)));
+		}
 		if (window.keyboard[GLFW_KEY_0].pressed)
 			field.solver.zero_field();
 		if (window.keyboard[GLFW_KEY_UP].pressed) {
