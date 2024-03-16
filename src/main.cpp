@@ -7,13 +7,14 @@
 #include "StamFFT_FluidSolver.h"
 #include "Field.h"
 #include "FieldRenderer.h"
+#include "rgFieldRenderer.h"
 LOG_MODULE(main);
 using namespace glm;
 
 #define DIM (256)
 
 static Field field(DIM);
-static FieldRenderer renderer(field);
+static rgFieldRenderer renderer(field);
 
 class flog {
 	std::string name;
@@ -48,7 +49,7 @@ int main() {
 	window.create("fft", 1024, 1024);
 	renderer.init();
 	Stopwatch timer(SECONDS);
-	renderer.buffer_texture();
+	renderer.prepare();
 	timer.start();	
 	Stopwatch dtimer(SECONDS);
 	dtimer.start();
@@ -78,7 +79,7 @@ int main() {
 		sv.dump(en-st);
 
 		st = timer.read(MICROSECONDS);
-		renderer.buffer_texture();
+		renderer.prepare();
 		renderer.render();
 		en = timer.read(MICROSECONDS);
 		rd.dump(en-st);
