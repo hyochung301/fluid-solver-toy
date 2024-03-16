@@ -8,13 +8,14 @@
 #include "Field.h"
 #include "FieldRenderer.h"
 #include "rgFieldRenderer.h"
+#include "vecFieldRenderer.h"
 LOG_MODULE(main);
 using namespace glm;
 
 #define DIM (256)
 
 static Field field(DIM);
-static rgFieldRenderer renderer(field);
+static FieldRenderer* renderer = 0;
 
 class flog {
 	std::string name;
@@ -44,7 +45,7 @@ public:
 	}
 };
 
-static void explode(int x0, int y0, int r) {
+static void explode(int x0, int y0, int r, float scale=20000.) {
 	const float mag = 1000.;
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -55,9 +56,8 @@ static void explode(int x0, int y0, int r) {
 			int dx = x-x0;
 			if (dx*dx+dy*dy <= r*r) {
 				int dx = x-x0; int dy = y-y0;
-				float fx = dx * (1000./(dx*dx+dy*dy)); 
-				float fy = dy * (1000./(dx*dx+dy*dy));
-				LOG_DBG("%.2f,%.2f",fx+dis(gen),fy+dis(gen));
+				float fx = dx * (scale/(dx*dx+dy*dy)); 
+				float fy = dy * (scale/(dx*dx+dy*dy));
 				field.solver.add_force(x,y, fx,fy);
 			}
 		}
@@ -67,9 +67,12 @@ static void explode(int x0, int y0, int r) {
 int main() {
 	gl.init();
 	window.create("fft", 1024, 1024);
-	renderer.init();
+
+	renderer = new vecFieldRenderer(field);
+
+	renderer->init();
 	Stopwatch timer(SECONDS);
-	renderer.prepare();
+	renderer->prepare();
 	timer.start();	
 	Stopwatch dtimer(SECONDS);
 	dtimer.start();
@@ -101,8 +104,8 @@ int main() {
 		sv.dump(en-st);
 
 		st = timer.read(MICROSECONDS);
-		renderer.prepare();
-		renderer.render();
+		renderer->prepare();
+		renderer->render();
 		en = timer.read(MICROSECONDS);
 		rd.dump(en-st);
 
@@ -110,6 +113,8 @@ int main() {
 		window.update();
 	}
 
+	renderer->destroy();
+	delete renderer;
 	gl.destroy();
 	return 0;
 }

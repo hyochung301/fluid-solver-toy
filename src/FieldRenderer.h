@@ -8,6 +8,7 @@ struct FieldRenderer {
 	Field const& field;
 
 	FieldRenderer(Field const& f);
+	virtual ~FieldRenderer();
 	virtual void init() 	= 0;
 	virtual void prepare() 	= 0;
 	virtual void render() 	= 0;
