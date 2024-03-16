@@ -21,8 +21,8 @@ target_link_libraries(${PROJECT_NAME} FLGL)
 
 find_library(FFTW
              NAMES fftw3
-             HINTS lib/fftw/bin/
-             NO_DEFAULT_PATH)
+             HINTS /usr/local/lib lib/fftw/bin
+             )
 
 if(FFTW)
     target_link_libraries(${PROJECT_NAME} ${FFTW})
