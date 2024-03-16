@@ -8,7 +8,7 @@
 * Press 0 to zero velocity field
 * Press V to change view
 
-![screen shot](/screenshot.png)
+![screen shot](/screenshot.png) ![screen shot](/screenshot_vec.png)
 
 I've been wanting to learn how these kinds of fluid sims work and of course the rabbit hole is deep. (computational fluid dynamics is complicated -- really?)      
 I found [this paper by Jos Stam (2001)](https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/jgt01.pdf) that details a "simple" and "good for beginners" FFT-based technique. 
