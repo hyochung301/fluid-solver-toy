@@ -4,7 +4,8 @@ out vec4 outColor;
 
 in vec2 iPos;
 
+uniform vec3 ucolor;
+
 void main(){
-    vec3 c = vec3( 1.f, 0.f, 0.f);
-    outColor = vec4(c,0.);
+    outColor = vec4(0.1,0.1,1.,0.);
 }

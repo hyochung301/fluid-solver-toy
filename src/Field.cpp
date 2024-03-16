@@ -28,7 +28,15 @@ void Field::step(float dt) {
 		auto delta = mouse_delta();
 
 		for (auto pt : Stepper(start.x, start.y, end.x, end.y)) {
-			solver.set_force(pt.x, pt.y, delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x  , pt.y  , delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x+1, pt.y  , delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x  , pt.y+1, delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x-1, pt.y  , delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x  , pt.y-1, delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x+1, pt.y+1, delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x+1, pt.y-1, delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x-1, pt.y+1, delta.x * 33., delta.y * 33.);
+			solver.set_force(pt.x-1, pt.y-1, delta.x * 33., delta.y * 33.);
 		}
 	}
 	solver.step(dt);

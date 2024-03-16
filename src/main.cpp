@@ -15,7 +15,7 @@ using namespace glm;
 #define DIM (256)
 
 static Field field(DIM);
-static FieldRenderer* renderer = 0;
+static FieldRenderer* rendererA = 0, * rendererB = 0;
 
 class flog {
 	std::string name;
@@ -68,11 +68,14 @@ int main() {
 	gl.init();
 	window.create("fft", 1024, 1024);
 
-	renderer = new vecFieldRenderer(field);
+	rendererA = new rgFieldRenderer(field);
+	rendererB = new vecFieldRenderer(field);
 
-	renderer->init();
+	rendererA->init();
+	rendererB->init();
 	Stopwatch timer(SECONDS);
-	renderer->prepare();
+	rendererA->prepare();
+	rendererB->prepare();
 	timer.start();	
 	Stopwatch dtimer(SECONDS);
 	dtimer.start();
@@ -80,6 +83,7 @@ int main() {
 	flog rd(256, "render");		
 	field.solver.random_fill(400.);
 	bool slowmo = false;
+	int view = 0;
 	while (!window.should_close()) {
 
 		if (window.keyboard[GLFW_KEY_R].down)
@@ -96,6 +100,8 @@ int main() {
 		}
 		if (window.mouse.left.pressed && window.keyboard[GLFW_KEY_SPACE].down)
 			explode(field.mouse_pos().x, field.mouse_pos().y, 128);
+		if (window.keyboard[GLFW_KEY_V].pressed)
+			view = (view+1)%3;
 
 		auto st = timer.read(MICROSECONDS);
 		field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
@@ -104,8 +110,20 @@ int main() {
 		sv.dump(en-st);
 
 		st = timer.read(MICROSECONDS);
-		renderer->prepare();
-		renderer->render();
+		gl.clear();
+		switch(view) {
+		case 2:
+			rendererA->prepare();
+			rendererA->render();
+		case 1:
+			rendererB->prepare();
+			rendererB->render();
+			break;
+		case 0:
+			rendererA->prepare();
+			rendererA->render();
+			break;
+		}
 		en = timer.read(MICROSECONDS);
 		rd.dump(en-st);
 
@@ -113,8 +131,10 @@ int main() {
 		window.update();
 	}
 
-	renderer->destroy();
-	delete renderer;
+	rendererA->destroy();
+	delete rendererA;
+	rendererB->destroy();
+	delete rendererB;
 	gl.destroy();
 	return 0;
 }

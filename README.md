@@ -6,6 +6,7 @@
 * Press R to randomize velocity field
 * Press S to toggle slow motion mode
 * Press 0 to zero velocity field
+* Press V to change view
 
 ![screen shot](/screenshot.png)
 

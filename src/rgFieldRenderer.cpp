@@ -17,7 +17,6 @@ void rgFieldRenderer::prepare() {
 	field_tex.unbind();
 }
 void rgFieldRenderer::render() {
-	gl.clear();
 	field_tex.bind();
 	field_tex.bind_to_unit(0);
 	field_shad.bind();
