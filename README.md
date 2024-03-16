@@ -18,6 +18,7 @@ There are two renderers that you can switch between or overlay: one simply rende
 The color renderer surprisingly has a very neat and fluid look to it, while the lines give you the tradtitional vector field rendering.
 
 # Building
-Like any of my graphics projects, this will build on mac windows or linux via cmake. More on that in the [flgl readme](https://github.com/collebrusco/flgl).   
-**However** this code depends on fftw as well. Place libfftw3.a built for your system in lib/fftw/bin as I have done with the library built for mac M1 arm64. Be sure to include the single precision FFTs.
+Like any of my graphics projects, this will build on mac windows or linux via cmake. More on that in flgl's [guide](https://github.com/collebrusco/flgl/blob/main/user/README.md).   
+     
+**However** this code depends on fftw as well. FFTW will install itself as a static library somewhere dependent on OS (/usr/local/lib on unix, somewhere on windows). CMake will search for it in the default locations as well as in lib/fftw/bin relative to this repo. Included there by default is fftw3 built for my system (M1 arm64). Be sure to build fftw with single precision FFTs.
 
