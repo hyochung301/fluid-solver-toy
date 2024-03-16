@@ -1,4 +1,4 @@
-#include "FFT_FluidSolver.h"
+#include "StamFFT_FluidSolver.h"
 #include <flgl/logger.h>
 #include <random>
 LOG_MODULE(fft_solver)
