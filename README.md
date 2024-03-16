@@ -1,6 +1,7 @@
 # fft fluid solver gfx demo
 ### Controls
 * Click and drag to swirl fluid around
+* Space + Click for an explosion
 * Press up/down to double/halve viscosity   
 * Press R to randomize velocity field
 * Press S to toggle slow motion mode

@@ -44,6 +44,26 @@ public:
 	}
 };
 
+static void explode(int x0, int y0, int r) {
+	const float mag = 1000.;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-mag, mag);
+	for (int y = y0-r; y < y0+r; y++) {
+		int dy = y-y0;
+		for (int x = x0-r; x < x0+r; x++) {
+			int dx = x-x0;
+			if (dx*dx+dy*dy <= r*r) {
+				int dx = x-x0; int dy = y-y0;
+				float fx = dx * (1000./(dx*dx+dy*dy)); 
+				float fy = dy * (1000./(dx*dx+dy*dy));
+				LOG_DBG("%.2f,%.2f",fx+dis(gen),fy+dis(gen));
+				field.solver.add_force(x,y, fx,fy);
+			}
+		}
+	}
+}
+
 int main() {
 	gl.init();
 	window.create("fft", 1024, 1024);
@@ -71,6 +91,8 @@ int main() {
 		if (window.keyboard[GLFW_KEY_DOWN].pressed) {
 			field.solver.viscosity /= 2.; LOG_DBG("viscosity: %e", field.solver.viscosity);
 		}
+		if (window.mouse.left.pressed && window.keyboard[GLFW_KEY_SPACE].down)
+			explode(field.mouse_pos().x, field.mouse_pos().y, 128);
 
 		auto st = timer.read(MICROSECONDS);
 		field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
