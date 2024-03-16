@@ -22,10 +22,10 @@ StamFFT_FluidSolver::~StamFFT_FluidSolver() {
     free_buffers();
 }
 
-float* StamFFT_FluidSolver::buff() {return buffer;}
-float* StamFFT_FluidSolver::x_buffer() {return u;}
-float* StamFFT_FluidSolver::y_buffer() {return v;}
-int const& StamFFT_FluidSolver::dim() {return n;}
+float* StamFFT_FluidSolver::buff() const {return buffer;}
+float* StamFFT_FluidSolver::x_buffer() const {return u;}
+float* StamFFT_FluidSolver::y_buffer() const {return v;}
+int const& StamFFT_FluidSolver::dim() const {return n;}
 
 void StamFFT_FluidSolver::add_force(int x, int y, int fx, int fy) {
 	u0[x+y*n] += fx;
@@ -37,7 +37,7 @@ void StamFFT_FluidSolver::set_force(int x, int y, int fx, int fy) {
 	v0[x+y*n] = fy;
 }
 
-void StamFFT_FluidSolver::get_force(int x, int y, int& fx, int& fy) {
+void StamFFT_FluidSolver::get_force(int x, int y, int& fx, int& fy) const {
 	fx = u0[x+y*n];
 	fy = v0[x+y*n];
 }

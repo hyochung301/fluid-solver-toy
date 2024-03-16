@@ -25,7 +25,7 @@ private:
                            float const& visc, float const& dt);
 public:
     float & viscosity;
-    int const& dim();
+    int const& dim() const;
 
     StamFFT_FluidSolver(int const& N);
     ~StamFFT_FluidSolver();
@@ -33,13 +33,13 @@ public:
     void random_fill(float mag);
     void zero_field();
 
-    float* buff();
-    float* x_buffer();
-    float* y_buffer();
+    float* buff() const;
+    float* x_buffer() const;
+    float* y_buffer() const;
 
     void add_force(int x, int y, int fx, int fy);
     void set_force(int x, int y, int fx, int fy);
-    void get_force(int x, int y, int& fx, int& fy);
+    void get_force(int x, int y, int& fx, int& fy) const;
 
     void step(float const& dt);
 
