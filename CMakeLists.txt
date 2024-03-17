@@ -28,6 +28,7 @@ find_library(FFTW
              )
 
 if(FFTW)
+    message("FFTW found")
     target_link_libraries(${PROJECT_NAME} ${FFTW})
 else()
     message(FATAL_ERROR "FFTW library not found")

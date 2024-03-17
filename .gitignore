@@ -7,3 +7,6 @@ Makefile
 bin/
 build/
 cmake_install.cmake
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
+
