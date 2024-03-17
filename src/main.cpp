@@ -17,16 +17,16 @@ using namespace glm;
 static Field field(DIM);
 static FieldRenderer* rendererA = 0, * rendererB = 0;
 
-class flog {
+class debug_buffer {
 	std::string name;
 	const unsigned int N;
 	float * buff;
 	unsigned int i;
 public:
-	flog(unsigned int n, std::string && nam) : N(n), name(nam) {
+	debug_buffer(unsigned int n, std::string && nam) : N(n), name(nam) {
 		buff = new float[N]; i = 0;
 	}
-	~flog() {
+	~debug_buffer() {
 		delete [] buff;
 	}
 	void outavg() {
@@ -42,6 +42,9 @@ public:
 			i = 0;
 			outavg();
 		}
+	}
+	void flush() {
+		i = 0;
 	}
 };
 
@@ -69,6 +72,7 @@ int main() {
 
 	rendererA = new rgFieldRenderer(field);
 	rendererB = new vecFieldRenderer(field);
+	
 	field.solver.random_fill(400.);
 
 	rendererA->init();
@@ -77,8 +81,8 @@ int main() {
 	rendererA->prepare();
 	rendererB->prepare();
 
-	flog sv(256, "solver");	
-	flog rd(256, "render");		
+	debug_buffer sv(256, "solver");	
+	debug_buffer rd(256, "render");		
 	bool slowmo = false;
 	int view = 0;
 	while (!window.should_close()) {
@@ -100,13 +104,15 @@ int main() {
 		}
 		if (window.mouse.left.pressed && window.keyboard[GLFW_KEY_SPACE].down)
 			explode(field.mouse_pos().x, field.mouse_pos().y, 128);
-		if (window.keyboard[GLFW_KEY_V].pressed)
-			view = (view+1)%3;
+		if (window.keyboard[GLFW_KEY_V].pressed) {
+			static const char* const rennames[4] = {"color", "vector", "overlay", "using renderer "};
+			view = (view+1)%3; sv.flush(); rd.flush(); LOG_DBG("%s%s", rennames[3], rennames[view]);
+		}
 
 			// solver step
 		auto st = timer.read(MICROSECONDS);
 		field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
-		field.solver.slow_fill_pixbuff();
+		if (view!=1) field.solver.slow_fill_pixbuff();
 		auto en = timer.read(MICROSECONDS);
 		sv.dump(en-st);
 
