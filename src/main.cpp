@@ -87,7 +87,7 @@ int main() {
 	int view = 0;
 	while (!window.should_close()) {
 			// controls
-		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
+		if (window.keyboard[GLFW_KEY_ESCAPE].down) this->close();
 		if (window.keyboard[GLFW_KEY_R].down)
 			field.solver.random_fill(400.);
 		if (window.keyboard[GLFW_KEY_S].pressed) {
