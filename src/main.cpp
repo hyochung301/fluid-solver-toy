@@ -47,9 +47,6 @@ public:
 
 static void explode(int x0, int y0, int r, float force=20000.) {
 	const float mag = 1000.;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-mag, mag);
 	for (int y = y0-r; y < y0+r; y++) {
 		int dy = y-y0;
 		for (int x = x0-r; x < x0+r; x++) {
@@ -66,26 +63,27 @@ static void explode(int x0, int y0, int r, float force=20000.) {
 
 int main() {
 	gl.init();
-	window.create("fft", 1024, 1024);
+	window.create("fluid solver toy", 1024, 1024);
+	Stopwatch timer(SECONDS); timer.start();
+	Stopwatch dtimer(SECONDS); dtimer.start();
 
 	rendererA = new rgFieldRenderer(field);
 	rendererB = new vecFieldRenderer(field);
+	field.solver.random_fill(400.);
 
 	rendererA->init();
 	rendererB->init();
-	Stopwatch timer(SECONDS);
+
 	rendererA->prepare();
 	rendererB->prepare();
-	timer.start();	
-	Stopwatch dtimer(SECONDS);
-	dtimer.start();
+
 	flog sv(256, "solver");	
 	flog rd(256, "render");		
-	field.solver.random_fill(400.);
 	bool slowmo = false;
 	int view = 0;
 	while (!window.should_close()) {
-
+			// controls
+		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
 		if (window.keyboard[GLFW_KEY_R].down)
 			field.solver.random_fill(400.);
 		if (window.keyboard[GLFW_KEY_S].pressed) {
@@ -105,12 +103,14 @@ int main() {
 		if (window.keyboard[GLFW_KEY_V].pressed)
 			view = (view+1)%3;
 
+			// solver step
 		auto st = timer.read(MICROSECONDS);
 		field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
 		field.solver.slow_fill_pixbuff();
 		auto en = timer.read(MICROSECONDS);
 		sv.dump(en-st);
 
+			// render
 		st = timer.read(MICROSECONDS);
 		gl.clear();
 		switch(view) {
@@ -129,7 +129,6 @@ int main() {
 		en = timer.read(MICROSECONDS);
 		rd.dump(en-st);
 
-		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
 		window.update();
 	}
 
