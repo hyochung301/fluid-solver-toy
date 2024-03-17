@@ -1,6 +1,7 @@
 #include "StamFFT_FluidSolver.h"
 #include <flgl/logger.h>
 #include <random>
+#include <cstring>
 LOG_MODULE(fft_solver)
 
 #define __floor(x) ((x)>=0.0?((int)(x)):(-((int)(1-(x)))))

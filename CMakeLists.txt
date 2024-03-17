@@ -13,14 +13,17 @@ include_directories(${PROJECT_SOURCE_DIR}/lib/sw)
 file(GLOB_RECURSE PROJECT_SOURCES "lib/sw/*.cpp" "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
 
 target_link_libraries(${PROJECT_NAME} FLGL)
 
+if (WIN32)
+  set(FFTW_NAME fftw3w)
+else()
+  set(FFTW_NAME fftw3)
+endif()
+
 find_library(FFTW
-             NAMES fftw3
+             NAMES ${FFTW_NAME}
              HINTS /usr/local/lib lib/fftw/bin
              )
 
