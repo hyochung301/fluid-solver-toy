@@ -66,7 +66,7 @@ static void explode(int x0, int y0, int r, float force=20000.) {
 
 int main() {
 	gl.init();
-	window.create("fluid solver toy", 1024, 1024);
+	window.create("fluid solver toy", 512, 512);
 	Stopwatch timer(SECONDS); timer.start();
 	Stopwatch dtimer(SECONDS); dtimer.start();
 
@@ -107,6 +107,14 @@ int main() {
 		if (window.keyboard[GLFW_KEY_V].pressed) {
 			static const char* const rennames[4] = {"color", "vector", "overlay", "using renderer "};
 			view = (view+1)%3; sv.flush(); rd.flush(); LOG_DBG("%s%s", rennames[3], rennames[view]);
+		}
+		if (window.keyboard[GLFW_KEY_P].pressed) {
+			rendererA->destroy();
+			rendererB->destroy();
+			rendererA->init();
+			rendererB->init();
+			rendererA->prepare();
+			rendererB->prepare();
 		}
 
 			// solver step
