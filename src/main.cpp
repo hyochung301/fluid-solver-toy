@@ -108,6 +108,14 @@ int main() {
 			static const char* const rennames[4] = {"color", "vector", "overlay", "using renderer "};
 			view = (view+1)%3; sv.flush(); rd.flush(); LOG_DBG("%s%s", rennames[3], rennames[view]);
 		}
+		if (window.keyboard[GLFW_KEY_P].pressed) {
+			rendererA->destroy();
+			rendererB->destroy();
+			rendererA->init();
+			rendererB->init();
+			rendererA->prepare();
+			rendererB->prepare();
+		}
 
 			// solver step
 		auto st = timer.read(MICROSECONDS);

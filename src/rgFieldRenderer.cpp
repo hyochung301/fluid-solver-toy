@@ -27,4 +27,7 @@ void rgFieldRenderer::render() {
 }
 
 void rgFieldRenderer::destroy() {
+	quad.destroy();
+	field_shad.destroy();
+	field_tex.destroy();
 }
