@@ -63,11 +63,15 @@ void StamFFT_FluidSolver::initFFT(int const& N, float* u_buffer, float* v_buffer
     inv_v =     fftwf_plan_dft_c2r_2d(n, n, (fftwf_complex*)v_buffer, v_buffer, FFTW_ESTIMATE);
 }
 void StamFFT_FluidSolver::alloc_buffers() {
+    int k;
     u = new float[n*n];
     v = new float[n*n];
+    for (k = 0; k < n*n; k++) {u[k]=0.;v[k]=0.;}
     u0 = new float[n*(n+2)];
     v0 = new float[n*(n+2)];
+    for (k = 0; k < n*(n+2); k++) {u0[k]=0.;v0[k]=0.;}
     buffer = new float[n*n*2];
+    for (k = 0; k < n*n*2; k++) {buffer[k]=0.;}
 }
 void StamFFT_FluidSolver::free_buffers() {
     delete [] u;
