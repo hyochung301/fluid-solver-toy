@@ -66,7 +66,7 @@ static void explode(int x0, int y0, int r, float force=20000.) {
 
 int main() {
 	gl.init();
-	window.create("fluid solver toy", 1024, 1024);
+	window.create("fluid solver toy", 512, 512);
 	Stopwatch timer(SECONDS); timer.start();
 	Stopwatch dtimer(SECONDS); dtimer.start();
 
