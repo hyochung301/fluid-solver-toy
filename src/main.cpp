@@ -66,7 +66,7 @@ static void explode(int x0, int y0, int r, float force=20000.) {
 
 int main() {
 	gl.init();
-	window.create("fluid solver toy", 512, 512);
+	window.create("fluid solver toy", 1024, 1024);
 	Stopwatch timer(SECONDS); timer.start();
 	Stopwatch dtimer(SECONDS); dtimer.start();
 
@@ -87,7 +87,7 @@ int main() {
 	int view = 0;
 	while (!window.should_close()) {
 			// controls
-		if (window.keyboard[GLFW_KEY_ESCAPE].down) this->close();
+		if (window.keyboard[GLFW_KEY_ESCAPE].down) window.close();
 		if (window.keyboard[GLFW_KEY_R].down)
 			field.solver.random_fill(400.);
 		if (window.keyboard[GLFW_KEY_S].pressed) {
