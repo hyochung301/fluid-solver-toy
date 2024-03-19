@@ -31,16 +31,19 @@ float* StamFFT_FluidSolver::y_buffer() const {return v;}
 int const& StamFFT_FluidSolver::dim() const {return n;}
 
 void StamFFT_FluidSolver::add_force(int x, int y, int fx, int fy) {
+    if (!((x+y*n) < n*n) || (x < 0) || (y < 0) || (x >= n) || (y >= n)) {return;}//LOG_ERR("add force at %d,%d = idx %d OOB", x, y, x+y*n); return;}
 	u0[x+y*n] += fx * force_mul;
 	v0[x+y*n] += fy * force_mul;
 }
 
 void StamFFT_FluidSolver::set_force(int x, int y, int fx, int fy) {
+    if (!((x+y*n) < n*n) || (x < 0) || (y < 0) || (x >= n) || (y >= n)) {return;}//LOG_ERR("add force at %d,%d = idx %d OOB", x, y, x+y*n); return;}
 	u0[x+y*n] = fx * force_mul;
 	v0[x+y*n] = fy * force_mul;
 }
 
 void StamFFT_FluidSolver::get_force(int x, int y, int& fx, int& fy) const {
+    if (!((x+y*n) < n*n) || (x < 0) || (y < 0) || (x >= n) || (y >= n)) {return;}//LOG_ERR("add force at %d,%d = idx %d OOB", x, y, x+y*n); return;}
 	fx = u0[x+y*n] / force_mul;
 	fy = v0[x+y*n] / force_mul;
 }
@@ -60,11 +63,15 @@ void StamFFT_FluidSolver::initFFT(int const& N, float* u_buffer, float* v_buffer
     inv_v =     fftwf_plan_dft_c2r_2d(n, n, (fftwf_complex*)v_buffer, v_buffer, FFTW_ESTIMATE);
 }
 void StamFFT_FluidSolver::alloc_buffers() {
+    int k;
     u = new float[n*n];
     v = new float[n*n];
+    for (k = 0; k < n*n; k++) {u[k]=0.;v[k]=0.;}
     u0 = new float[n*(n+2)];
     v0 = new float[n*(n+2)];
+    for (k = 0; k < n*(n+2); k++) {u0[k]=0.;v0[k]=0.;}
     buffer = new float[n*n*2];
+    for (k = 0; k < n*n*2; k++) {buffer[k]=0.;}
 }
 void StamFFT_FluidSolver::free_buffers() {
     delete [] u;

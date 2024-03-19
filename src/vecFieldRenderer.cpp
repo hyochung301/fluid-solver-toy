@@ -117,5 +117,7 @@ void vecFieldRenderer::render() {
 }
 
 void vecFieldRenderer::destroy() {
+	line_shad.destroy();
+	mesh.destroy();
 	delete [] buffer;
 }
