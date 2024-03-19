@@ -2,6 +2,7 @@
 #define FFT_FLUID_SOLVER_H
 #include <fftw3.h>
 #include <cmath>
+#include "../lib/sw/Stopwatch.h"
 
 /*
     solver: https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/jgt01.pdf
@@ -15,6 +16,10 @@ private:
     float visc;
     float* buffer;
     float force_mul;
+
+    Stopwatch timer;
+    float t_us_solver;
+    float t_us_ffts;
 
     void initFFT(int const& N, float* u_buffer, float* v_buffer);
     void alloc_buffers();
@@ -45,6 +50,8 @@ public:
     float force_multiplier();
 
     void step(float const& dt);
+    float get_prev_solver_t();
+    float get_prev_fft_t();
 
     void slow_fill_pixbuff();
 
