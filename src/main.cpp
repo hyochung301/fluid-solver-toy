@@ -35,8 +35,8 @@ public:
 			aF += buffF[j];
 			aR += buffR[j];
 		}
-		LOG_DBG("solver avg t = %.1f, ffts avg t = %.1f for %.1f%% of solver",aS/N,aF/N,100.*(aF/aS));
-		LOG_DBG("render avg t = %.1f", aR/N);
+		LOG_DBG("solver avg t = %.1fus, ffts avg t = %.1fus for %.1f%% of solver",aS/N,aF/N,100.*(aF/aS));
+		LOG_DBG("render avg t = %.1fus", aR/N);
 	}
 	void dump(float solver, float fft, float render) {
 		buffS[i] = solver;
