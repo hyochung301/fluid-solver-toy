@@ -15,7 +15,8 @@ LOG_MODULE(fft_solver)
 
 StamFFT_FluidSolver::StamFFT_FluidSolver(int const& N) : n(N), 
                                                          viscosity(visc), 
-                                                         force_mul(1.) {
+                                                         force_mul(1.),
+                                                         timer(MICROSECONDS) {
 	visc = 0.001;
     alloc_buffers();
     initFFT(n, u0, v0);
@@ -137,6 +138,17 @@ void StamFFT_FluidSolver::step(float const& dt) {
 	this->stam_stable_solve(n, u, v, u0, v0, visc, dt);
 }
 
+float StamFFT_FluidSolver::get_prev_solver_t() {
+    return t_us_solver;
+}
+
+float StamFFT_FluidSolver::get_prev_fft_t() {
+    return t_us_ffts;
+}
+
+#define TIMER_ACCUMULATION_START(grbg)  st = timer.read();
+#define TIMER_ACCUMULATION_END(grbg)    en = timer.read(); t_us_ffts += en-st;
+
 /*
 	This is Stam's solver itself
 	It is almost the same as in his paper
@@ -159,6 +171,9 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
 {
     float x, y, f, r, U[2], V[2], s, t;
     int i, j, i0, j0, i1, j1;
+
+    // debug code
+    timer.reset_start(); float st; float en; st=en=t_us_ffts=t_us_solver=0.;
 
     // apply forces
     for ( i=0 ; i<N*N ; i++ ) {
@@ -190,7 +205,9 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     }
 
     // transform to fourier domain
+    TIMER_ACCUMULATION_START(); // debug code
     fftwf_execute(forward_u); fftwf_execute(forward_v);
+    TIMER_ACCUMULATION_END();   // debug code
 
     // apply low pass filter to simulate viscosity
     // and force field to be mass converving
@@ -213,7 +230,9 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     }
 
     // inverse ffts back to spatial domain
+    TIMER_ACCUMULATION_START(); // debug code
     fftwf_execute(inv_u); fftwf_execute(inv_v);
+    TIMER_ACCUMULATION_END();   // debug code
 
     // normalize (r2c then c2r tform multiplies all by n*n)
     f = 1.0/(N*N);
@@ -228,4 +247,5 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     memset(u0,0,sizeof(float)*N*N);
     memset(v0,0,sizeof(float)*N*N);
 
+    t_us_solver = timer.stop();
 }

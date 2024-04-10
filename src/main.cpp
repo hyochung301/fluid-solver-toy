@@ -18,26 +18,31 @@ static Field field(DIM);
 static FieldRenderer* rendererA = 0, * rendererB = 0;
 
 class debug_buffer {
-	std::string name;
 	const unsigned int N;
-	float * buff;
+	float * buffS, * buffF, * buffR;
 	unsigned int i;
 public:
-	debug_buffer(unsigned int n, std::string && nam) : N(n), name(nam) {
-		buff = new float[N]; i = 0;
+	debug_buffer(unsigned int n) : N(n) {
+		buffS = new float[N]; buffF = new float[N]; buffR = new float[N]; i = 0;
 	}
 	~debug_buffer() {
-		delete [] buff;
+		delete [] buffS; delete [] buffF; delete [] buffR;
 	}
 	void outavg() {
-		float a = 0.;
+		float aS = 0., aF = 0., aR = 0.;
 		for (int j = 0; j < N; j++) {
-			a += buff[j];
+			aS += buffS[j];
+			aF += buffF[j];
+			aR += buffR[j];
 		}
-		LOG_DBG(name + " rolling avg time: %.1fus", a/N);
+		LOG_DBG("solver avg t = %.1fus, ffts avg t = %.1fus for %.1f%% of solver",aS/N,aF/N,100.*(aF/aS));
+		LOG_DBG("render avg t = %.1fus", aR/N);
 	}
-	void dump(float v) {
-		buff[i++] = v;
+	void dump(float solver, float fft, float render) {
+		buffS[i] = solver;
+		buffF[i] = fft;
+		buffR[i] = render;
+		i++;
 		if (!(i < N)) {
 			i = 0;
 			outavg();
@@ -66,7 +71,7 @@ static void explode(int x0, int y0, int r, float force=20000.) {
 
 int main() {
 	gl.init();
-	window.create("fluid solver toy", 512, 512);
+	window.create("fluid solver toy", 1024, 1024);
 	Stopwatch timer(SECONDS); timer.start();
 	Stopwatch dtimer(SECONDS); dtimer.start();
 
@@ -81,13 +86,12 @@ int main() {
 	rendererA->prepare();
 	rendererB->prepare();
 
-	debug_buffer sv(256, "solver");	
-	debug_buffer rd(256, "render");		
+	debug_buffer debug(256);	
 	bool slowmo = false;
 	int view = 0;
 	while (!window.should_close()) {
 			// controls
-		if (window.keyboard[GLFW_KEY_ESCAPE].down) break;
+		if (window.keyboard[GLFW_KEY_ESCAPE].down) window.close();
 		if (window.keyboard[GLFW_KEY_R].down)
 			field.solver.random_fill(400.);
 		if (window.keyboard[GLFW_KEY_S].pressed) {
@@ -106,7 +110,7 @@ int main() {
 			explode(field.mouse_pos().x, field.mouse_pos().y, 128);
 		if (window.keyboard[GLFW_KEY_V].pressed) {
 			static const char* const rennames[4] = {"color", "vector", "overlay", "using renderer "};
-			view = (view+1)%3; sv.flush(); rd.flush(); LOG_DBG("%s%s", rennames[3], rennames[view]);
+			view = (view+1)%3; debug.flush(); LOG_DBG("%s%s", rennames[3], rennames[view]);
 		}
 		if (window.keyboard[GLFW_KEY_P].pressed) {
 			rendererA->destroy();
@@ -118,14 +122,11 @@ int main() {
 		}
 
 			// solver step
-		auto st = timer.read(MICROSECONDS);
 		field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
 		if (view!=1) field.solver.slow_fill_pixbuff();
-		auto en = timer.read(MICROSECONDS);
-		sv.dump(en-st);
 
 			// render
-		st = timer.read(MICROSECONDS);
+		float st = timer.read(MICROSECONDS);
 		gl.clear();
 		switch(view) {
 		case 2:
@@ -140,8 +141,10 @@ int main() {
 			rendererA->render();
 			break;
 		}
-		en = timer.read(MICROSECONDS);
-		rd.dump(en-st);
+		float en = timer.read(MICROSECONDS);
+		debug.dump(field.solver.get_prev_solver_t(),
+				   field.solver.get_prev_fft_t(),
+				   en-st);
 
 		window.update();
 	}
@@ -153,8 +156,6 @@ int main() {
 	gl.destroy();
 	return 0;
 }
-
-
 
 
 
