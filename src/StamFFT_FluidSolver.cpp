@@ -3,8 +3,6 @@
 #include <random>
 #include <cstring>
 LOG_MODULE(fft_solver)
-
-#define __floor(x) ((x)>=0.0?((int)(x)):(-((int)(1-(x)))))
 	
 // === private members: ===
 // const int n;
@@ -148,6 +146,8 @@ float StamFFT_FluidSolver::get_prev_fft_t() {
 
 #define TIMER_ACCUMULATION_START(grbg)  st = timer.read();
 #define TIMER_ACCUMULATION_END(grbg)    en = timer.read(); t_us_ffts += en-st;
+
+#define __floor(x) ((x)>=0.0?((int)(x)):(-((int)(1-(x)))))
 
 /*
 	This is Stam's solver itself

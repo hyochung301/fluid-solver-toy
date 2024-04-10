@@ -9,6 +9,7 @@
 #include "FieldRenderer.h"
 #include "rgFieldRenderer.h"
 #include "vecFieldRenderer.h"
+#include "SolverToy.h"
 LOG_MODULE(main);
 using namespace glm;
 
@@ -122,7 +123,8 @@ int main() {
 		}
 
 			// solver step
-		field.step(slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start());
+		float dt = slowmo ? dtimer.stop_reset_start()/10. : dtimer.stop_reset_start();
+		field.step(dt);
 		if (view!=1) field.solver.slow_fill_pixbuff();
 
 			// render
