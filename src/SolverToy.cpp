@@ -6,3 +6,7 @@ SolverToy::~SolverToy() {}
 void SolverToy::userLoop(float dt) {(void)dt;} // unimplemented by default
 
 void SolverToy::use_fft(FFT_Solver2d* fft) {userFFT = fft;}
+
+void SolverToy::run() {
+	
+}

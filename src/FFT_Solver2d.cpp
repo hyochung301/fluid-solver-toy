@@ -6,7 +6,7 @@ FFT_Solver2d::~FFT_Solver2d() {}
 
 FFTW_FFT_Solver2d::FFTW_FFT_Solver2d(size_t n, float* buff) : FFT_Solver2d(n,buff) {
     forw = fftwf_plan_dft_r2c_2d(N, N, buffer, (fftwf_complex*)buffer, FFTW_ESTIMATE);
-    inv =     fftwf_plan_dft_c2r_2d(N, N, (fftwf_complex*)buffer, buffer, FFTW_ESTIMATE);
+    inv =  fftwf_plan_dft_c2r_2d(N, N, (fftwf_complex*)buffer, buffer, FFTW_ESTIMATE);
 }
 
 FFTW_FFT_Solver2d::~FFTW_FFT_Solver2d() {
