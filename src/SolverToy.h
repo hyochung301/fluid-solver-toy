@@ -43,7 +43,7 @@ public:
     }
 
 	// enter main loop, runs until esc pressed or win closed
-	void run();
+	void run(void(*loopfunc)(float) = 0);
 
 };
 

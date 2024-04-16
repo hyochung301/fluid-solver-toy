@@ -79,7 +79,7 @@ void SolverToy::explode(int x0, int y0, int r, float force) {
 }
 
 
-void SolverToy::run() {
+void SolverToy::run(void(*loopfunc)(float)) {
 	gl.init();
 	window.create("fluid solver toy", 1024, 1024);
 	Stopwatch timer(SECONDS); timer.start();
@@ -157,6 +157,9 @@ void SolverToy::run() {
 		debug.dump(field.solver.get_prev_solver_t(),
 				   field.solver.get_prev_fft_t(),
 				   en-st);
+
+		this->userLoop(dt);
+		if (loopfunc) loopfunc(dt);
 
 		window.update();
 	}
