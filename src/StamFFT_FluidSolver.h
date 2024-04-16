@@ -1,8 +1,8 @@
 #ifndef FFT_FLUID_SOLVER_H
 #define FFT_FLUID_SOLVER_H
-#include <fftw3.h>
 #include <cmath>
 #include "../lib/sw/Stopwatch.h"
+#include "FFT_Solver2d.h"
 
 /*
     solver: https://www.dgp.toronto.edu/public_user/stam/reality/Research/pdf/jgt01.pdf
@@ -11,7 +11,6 @@
 class StamFFT_FluidSolver {
 private:
     const int n;
-    fftwf_plan forward_u, forward_v, inv_u, inv_v;
     float* u, * v, * u0, * v0;
     float visc;
     float* buffer;
@@ -21,10 +20,10 @@ private:
     float t_us_solver;
     float t_us_ffts;
 
-    void initFFT(int const& N, float* u_buffer, float* v_buffer);
+    FFT_Solver2d * fftu, * fftv;
+
     void alloc_buffers();
     void free_buffers();
-    void destroyFFT();
     void stam_stable_solve(int const& N, 
                            float* const u, float* const v, 
                            float* const u0, float* const v0, 
@@ -36,12 +35,16 @@ public:
     StamFFT_FluidSolver(int const& N);
     ~StamFFT_FluidSolver();
 
+    void use_ffts(FFT_Solver2d* fu, FFT_Solver2d* fv);
+
     void random_fill(float mag);
     void zero_field();
 
     float* buff() const;
     float* x_buffer() const;
     float* y_buffer() const;
+    float* fx_buffer() const;
+    float* fy_buffer() const;
 
     void add_force(int x, int y, int fx, int fy);
     void set_force(int x, int y, int fx, int fy);

@@ -1,9 +1,12 @@
 #include "Field.h"
 #include "Stepper.h"
 #include <flgl.h>
+#include <flgl/logger.h>
 using namespace glm;
+LOG_MODULE(field);
 
 Field::Field(int const& N) : solver(N) {
+	LOG_DBG("constructing field...");
 	solver.random_fill(100.);
 }
 

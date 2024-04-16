@@ -2,7 +2,7 @@
 #include <flgl/logger.h>
 #include <random>
 #include <cstring>
-LOG_MODULE(fft_solver)
+LOG_MODULE(fluid_solver)
 	
 // === private members: ===
 // const int n;
@@ -15,18 +15,23 @@ StamFFT_FluidSolver::StamFFT_FluidSolver(int const& N) : n(N),
                                                          viscosity(visc), 
                                                          force_mul(1.),
                                                          timer(MICROSECONDS) {
+    LOG_DBG("constructing fluid solver...");
 	visc = 0.001;
     alloc_buffers();
-    initFFT(n, u0, v0);
 }
 StamFFT_FluidSolver::~StamFFT_FluidSolver() {
-    destroyFFT();
     free_buffers();
+}
+
+void StamFFT_FluidSolver::use_ffts(FFT_Solver2d* fu, FFT_Solver2d* fv) {
+    fftu = fu; fftv = fv;
 }
 
 float* StamFFT_FluidSolver::buff() const {return buffer;}
 float* StamFFT_FluidSolver::x_buffer() const {return u;}
 float* StamFFT_FluidSolver::y_buffer() const {return v;}
+float* StamFFT_FluidSolver::fx_buffer() const {return u0;}
+float* StamFFT_FluidSolver::fy_buffer() const {return v0;}
 int const& StamFFT_FluidSolver::dim() const {return n;}
 
 void StamFFT_FluidSolver::add_force(int x, int y, int fx, int fy) {
@@ -55,12 +60,6 @@ float StamFFT_FluidSolver::force_multiplier() {
     return force_mul;
 }
 
-void StamFFT_FluidSolver::initFFT(int const& N, float* u_buffer, float* v_buffer) {
-    forward_u = fftwf_plan_dft_r2c_2d(n, n, u_buffer, (fftwf_complex*)u_buffer, FFTW_ESTIMATE);
-    forward_v = fftwf_plan_dft_r2c_2d(n, n, v_buffer, (fftwf_complex*)v_buffer, FFTW_ESTIMATE);
-    inv_u =     fftwf_plan_dft_c2r_2d(n, n, (fftwf_complex*)u_buffer, u_buffer, FFTW_ESTIMATE);
-    inv_v =     fftwf_plan_dft_c2r_2d(n, n, (fftwf_complex*)v_buffer, v_buffer, FFTW_ESTIMATE);
-}
 void StamFFT_FluidSolver::alloc_buffers() {
     int k;
     u = new float[n*n];
@@ -72,20 +71,13 @@ void StamFFT_FluidSolver::alloc_buffers() {
     buffer = new float[n*n*2];
     for (k = 0; k < n*n*2; k++) {buffer[k]=0.;}
 }
+
 void StamFFT_FluidSolver::free_buffers() {
     delete [] u;
     delete [] v;
     delete [] u0;
     delete [] v0;
     delete [] buffer;
-}
-void StamFFT_FluidSolver::destroyFFT() {
-    fftwf_destroy_plan(forward_u);
-    fftwf_destroy_plan(forward_v);
-    fftwf_destroy_plan(inv_u);
-    fftwf_destroy_plan(inv_v);
-    fftwf_cleanup();
-    LOG_DBG("destroyed fftw");
 }
 
 void StamFFT_FluidSolver::random_fill(float mag) { 
@@ -180,7 +172,6 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
         u[i] += dt*u0[i]; u0[i] = u[i];
         v[i] += dt*v0[i]; v0[i] = v[i];
     }
-
     // self-advection: semi-Lagrangian scheme
     // here, (u0,v0) are used to interpolate 
     // and (u,v) stores the interpolation & result
@@ -206,7 +197,7 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
 
     // transform to fourier domain
     TIMER_ACCUMULATION_START(); // debug code
-    fftwf_execute(forward_u); fftwf_execute(forward_v);
+    fftu->forward(); fftv->forward();           // SPATIAL -> FOURIER
     TIMER_ACCUMULATION_END();   // debug code
 
     // apply low pass filter to simulate viscosity
@@ -231,7 +222,7 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
 
     // inverse ffts back to spatial domain
     TIMER_ACCUMULATION_START(); // debug code
-    fftwf_execute(inv_u); fftwf_execute(inv_v);
+    fftu->inverse(); fftv->inverse();           // FOURIER -> SPATIAL
     TIMER_ACCUMULATION_END();   // debug code
 
     // normalize (r2c then c2r tform multiplies all by n*n)
