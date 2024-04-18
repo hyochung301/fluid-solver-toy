@@ -6,14 +6,11 @@
 	This is the abstract interface for our various 2D FFT solvers
 	FFTs will be performed on inputs of real #'s represented as float arrays
 	the FFTs should be performed in place -- even if this is just a copy :(
-	FFT buffer is of size (n*(n+2))
+	FFT buffer is of size (n*n*2)
 
-	Here is the MIT FFTW documentation -- let's format our FFTs the same way:
-	https://www.fftw.org/fftw3_doc/Multi_002dDimensional-DFTs-of-Real-Data.html
-
-	Where: for 0 <= i,j < N:
-	real part of elem i,j: buffer[i  +(N+2)*j]
-	imag part of elem i,j: buffer[i+1+(N+2)*j]
+	Where for i,j from 0 to N-1:
+	real part of elem i,j: buffer[2 * (i+N*j)    ]
+	imag part of elem i,j: buffer[2 * (i+N*j) + 1]
 
 	These will be ffts of real data, thus there will be no imaginary part in the input
 */

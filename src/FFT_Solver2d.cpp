@@ -7,7 +7,6 @@ FFT_Solver2d::FFT_Solver2d(size_t n, float* buff) : N(n), buffer(buff) {}
 FFT_Solver2d::~FFT_Solver2d() {}
 
 FFTW_FFT_Solver2d::FFTW_FFT_Solver2d(size_t n, float* buff) : FFT_Solver2d(n,buff) {
-    LOG_DBG("buffer is %x", buffer);
     forw = fftwf_plan_dft_2d(N, N, (fftwf_complex*)buffer, (fftwf_complex*)buffer, FFTW_FORWARD, FFTW_ESTIMATE);
     inv =  fftwf_plan_dft_2d(N, N, (fftwf_complex*)buffer, (fftwf_complex*)buffer, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
