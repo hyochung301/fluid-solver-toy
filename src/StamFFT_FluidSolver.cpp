@@ -212,9 +212,9 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     // by projecting vectors onto line perpendicular to wave #
     // which is line tan to circles centered at origin
     for (int i = 0; i < N; i++) {
-        x = (i <= N/2) ? i : i - N; // Correct handling of negative frequencies
+        x = (i <= N/2) ? i : (float)i - (float)N; // Correct handling of negative frequencies
         for (int j = 0; j < N; j++) {
-            y = (j <= N/2) ? j : j - N; // Correct handling of negative frequencies
+            y = (j <= N/2) ? j : (float)j - (float)N; // Correct handling of negative frequencies
             r = x*x + y*y;
             if (r == 0.0) continue; // Skip the DC component
 
