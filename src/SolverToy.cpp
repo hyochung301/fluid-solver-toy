@@ -11,14 +11,15 @@
 #include "rgFieldRenderer.h"
 #include "vecFieldRenderer.h"
 #include "SolverToy.h"
-LOG_MODULE(solver);
+LOG_MODULE(solvertoy);
 using namespace glm;
 
 SolverToy::SolverToy(size_t n) : N(n), field(n) {
 	LOG_DBG("creating default ffts..");
     fftu = new FFTW_FFT_Solver2d(n, field.solver.fx_buffer());
     fftv = new FFTW_FFT_Solver2d(n, field.solver.fy_buffer());
-        field.solver.use_ffts(fftu, fftv);
+    LOG_DBG("done creating new ffts");
+    field.solver.use_ffts(fftu, fftv);
 }
 SolverToy::~SolverToy() {
 	delete fftu; delete fftv;

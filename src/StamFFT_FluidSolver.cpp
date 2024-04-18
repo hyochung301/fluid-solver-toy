@@ -65,9 +65,9 @@ void StamFFT_FluidSolver::alloc_buffers() {
     u = new float[n*n];
     v = new float[n*n];
     for (k = 0; k < n*n; k++) {u[k]=0.;v[k]=0.;}
-    u0 = new float[n*(n+2)];
-    v0 = new float[n*(n+2)];
-    for (k = 0; k < n*(n+2); k++) {u0[k]=0.;v0[k]=0.;}
+    u0 = new float[n*n*2];
+    v0 = new float[n*n*2];
+    for (k = 0; k < n*n*2; k++) {u0[k]=0.;v0[k]=0.;}
     buffer = new float[n*n*2];
     for (k = 0; k < n*n*2; k++) {buffer[k]=0.;}
 }
@@ -86,7 +86,7 @@ void StamFFT_FluidSolver::random_fill(float mag) {
     std::uniform_real_distribution<> dis(-mag, mag);
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-            u0[i+j*n] = dis(gen); v0[i+j*n] = dis(gen);
+            u0[2*(i+j*n)] = dis(gen); v0[2*(i+j*n)] = dis(gen);
         }
     }
 }
@@ -156,6 +156,9 @@ float StamFFT_FluidSolver::get_prev_fft_t() {
 		(u, v): 	next step of fluid solver
 		(u0,v0):	cleared for new forces
 */
+#define BUFF_R(buf, i, j) buf[2*(i  +(j*N))]
+#define BUFF_I(buf, i, j) buf[2*(i+1+(j*N))]
+
 void StamFFT_FluidSolver::stam_stable_solve(int const& N, 
                        float* const u, float* const v, 
                        float* const u0, float* const v0, 
@@ -172,9 +175,9 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
         u[i] += dt*u0[i]; u0[i] = u[i];
         v[i] += dt*v0[i]; v0[i] = v[i];
     }
-    // self-advection: semi-Lagrangian scheme
-    // here, (u0,v0) are used to interpolate 
-    // and (u,v) stores the interpolation & result
+    // // self-advection: semi-Lagrangian scheme
+    // // here, (u0,v0) are used to interpolate 
+    // // and (u,v) stores the interpolation & result
     for ( i=0 ; i<N ; i++ ) {
         for ( j=0 ; j<N ; j++ ) {
             x = i-dt*u0[i+N*j]*N; y = j-dt*v0[i+N*j]*N;
@@ -190,8 +193,12 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     // copy velos into real-part of fourier buffers (i think)
     for ( i=0 ; i<N ; i++ ) {
         for ( j=0 ; j<N ; j++ ) {
-        	u0[i+(N+2)*j] = u[i+N*j]; 
-        	v0[i+(N+2)*j] = v[i+N*j]; 
+        	// u0[i+(N)*j] = u[i+N*j]; 
+        	// v0[i+(N)*j] = v[i+N*j]; 
+            BUFF_R(u0, i, j) = u[i+N*j]; 
+            BUFF_R(v0, i, j) = v[i+N*j];
+            BUFF_I(u0, i, j) = 0.; 
+            BUFF_I(v0, i, j) = 0.;
         }
     }
 
@@ -204,21 +211,50 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     // and force field to be mass converving
     // by projecting vectors onto line perpendicular to wave #
     // which is line tan to circles centered at origin
-    for ( i=0 ; i<=N ; i+=2 ) {
-        x = 0.5*i;
-        for ( j=0 ; j<N ; j++ ) {
-            y = j<=N/2 ? j : j-N;
-            r = x*x+y*y;
-            if ( r==0.0 ) continue;
-            f = exp(-r*dt*visc); // filter
-            U[0] = u0[i  +(N+2)*j]; V[0] = v0[i  +(N+2)*j];
-            U[1] = u0[i+1+(N+2)*j]; V[1] = v0[i+1+(N+2)*j];	// transformed complex vector (U,V)
-            u0[i  +(N+2)*j] = f*( (1-x*x/r)*U[0]     -x*y/r *V[0] );
-            u0[i+1+(N+2)*j] = f*( (1-x*x/r)*U[1]     -x*y/r *V[1] );
-            v0[i+  (N+2)*j] = f*(   -y*x/r *U[0] + (1-y*y/r)*V[0] );
-            v0[i+1+(N+2)*j] = f*(   -y*x/r *U[1] + (1-y*y/r)*V[1] ); // apply filter & project
+    for (int i = 0; i < N; i++) {
+        x = (i <= N/2) ? i : i - N; // Correct handling of negative frequencies
+        for (int j = 0; j < N; j++) {
+            y = (j <= N/2) ? j : j - N; // Correct handling of negative frequencies
+            r = x*x + y*y;
+            if (r == 0.0) continue; // Skip the DC component
+
+            float *uf = &(u0[i + N*j]);
+            float *vf = &(v0[i + N*j]);
+            
+            float f = exp(-r * dt * visc); // Low-pass filter
+            
+            // Applying the filter and projection
+            float ur = f * ( (1 - x*x/r)*uf[0] - x*y/r * vf[0] );
+            float ui = f * ( (1 - x*x/r)*uf[1] - x*y/r * vf[1] );
+            float vr = f * ( -y*x/r * uf[0] + (1 - y*y/r)*vf[0] );
+            float vi = f * ( -y*x/r * uf[1] + (1 - y*y/r)*vf[1] );
+
+            // Update the original arrays
+            (&(u0[i + N*j]))[0] = ur;
+            (&(u0[i + N*j]))[1] = ui;
+            (&(v0[i + N*j]))[0] = vr;
+            (&(v0[i + N*j]))[1] = vi;
         }
     }
+
+    // memset(u0,0,sizeof(float)*N*N*2);
+    // memset(v0,0,sizeof(float)*N*N*2);
+
+    // for ( i=0 ; i<=N ; i+=2 ) {
+    //     x = 0.5*i;
+    //     for ( j=0 ; j<N ; j++ ) {
+    //         y = j<=N/2 ? j : j-N;
+    //         r = x*x+y*y;
+    //         if ( r==0.0 ) continue;
+    //         f = exp(-r*dt*visc); // filter
+    //         U[0] = u0[i  +(N+2)*j]; V[0] = v0[i  +(N+2)*j];
+    //         U[1] = u0[i+1+(N+2)*j]; V[1] = v0[i+1+(N+2)*j]; // transformed complex vector (U,V)
+    //         u0[i  +(N+2)*j] = f*( (1-x*x/r)*U[0]     -x*y/r *V[0] );
+    //         u0[i+1+(N+2)*j] = f*( (1-x*x/r)*U[1]     -x*y/r *V[1] );
+    //         v0[i+  (N+2)*j] = f*(   -y*x/r *U[0] + (1-y*y/r)*V[0] );
+    //         v0[i+1+(N+2)*j] = f*(   -y*x/r *U[1] + (1-y*y/r)*V[1] ); // apply filter & project
+    //     }
+    // }
 
     // inverse ffts back to spatial domain
     TIMER_ACCUMULATION_START(); // debug code
@@ -230,13 +266,13 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     for ( i=0 ; i<N ; i++ ) {
         for ( j=0 ; j<N ; j++ )
         { 
-            u[i+N*j] = f*u0[i+(N+2)*j]; v[i+N*j] = f*v0[i+(N+2)*j]; 
+            u[i+N*j] = f*BUFF_R(u0, i, j); v[i+N*j] = f*BUFF_R(v0, i, j); 
         }
     }
 
     // clear force field
-    memset(u0,0,sizeof(float)*N*N);
-    memset(v0,0,sizeof(float)*N*N);
+    memset(u0,0,sizeof(float)*N*N*2);
+    memset(v0,0,sizeof(float)*N*N*2);
 
     t_us_solver = timer.stop();
 }

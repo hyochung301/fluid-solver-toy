@@ -1,12 +1,15 @@
 #include "FFT_Solver2d.h"
+#include <flgl/logger.h>
+LOG_MODULE(fft_solver_base);
 
 FFT_Solver2d::FFT_Solver2d(size_t n, float* buff) : N(n), buffer(buff) {}
 
 FFT_Solver2d::~FFT_Solver2d() {}
 
 FFTW_FFT_Solver2d::FFTW_FFT_Solver2d(size_t n, float* buff) : FFT_Solver2d(n,buff) {
-    forw = fftwf_plan_dft_r2c_2d(N, N, buffer, (fftwf_complex*)buffer, FFTW_ESTIMATE);
-    inv =  fftwf_plan_dft_c2r_2d(N, N, (fftwf_complex*)buffer, buffer, FFTW_ESTIMATE);
+    LOG_DBG("buffer is %x", buffer);
+    forw = fftwf_plan_dft_2d(N, N, (fftwf_complex*)buffer, (fftwf_complex*)buffer, FFTW_FORWARD, FFTW_ESTIMATE);
+    inv =  fftwf_plan_dft_2d(N, N, (fftwf_complex*)buffer, (fftwf_complex*)buffer, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
 
 FFTW_FFT_Solver2d::~FFTW_FFT_Solver2d() {
