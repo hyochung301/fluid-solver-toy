@@ -175,9 +175,9 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
         u[i] += dt*u0[i]; u0[i] = u[i];
         v[i] += dt*v0[i]; v0[i] = v[i];
     }
-    // // self-advection: semi-Lagrangian scheme
-    // // here, (u0,v0) are used to interpolate 
-    // // and (u,v) stores the interpolation & result
+    // self-advection: semi-Lagrangian scheme
+    // here, (u0,v0) are used to interpolate 
+    // and (u,v) stores the interpolation & result
     for ( i=0 ; i<N ; i++ ) {
         for ( j=0 ; j<N ; j++ ) {
             x = i-dt*u0[i+N*j]*N; y = j-dt*v0[i+N*j]*N;
@@ -212,49 +212,28 @@ void StamFFT_FluidSolver::stam_stable_solve(int const& N,
     // by projecting vectors onto line perpendicular to wave #
     // which is line tan to circles centered at origin
     for (int i = 0; i < N; i++) {
-        x = (i <= N/2) ? i : (float)i - (float)N; // Correct handling of negative frequencies
+        x = (i <= N/2) ? i : (float)i - (float)N;
         for (int j = 0; j < N; j++) {
-            y = (j <= N/2) ? j : (float)j - (float)N; // Correct handling of negative frequencies
+            y = (j <= N/2) ? j : (float)j - (float)N;
             r = x*x + y*y;
-            if (r == 0.0) continue; // Skip the DC component
+            if (r == 0.0) continue;
 
-            float *uf = &(u0[i + N*j]);
-            float *vf = &(v0[i + N*j]);
+            float *uf = &(u0[2*(i + N*j)]);
+            float *vf = &(v0[2*(i + N*j)]);
             
-            float f = exp(-r * dt * visc); // Low-pass filter
+            float f = exp(-r * dt * visc);
             
-            // Applying the filter and projection
             float ur = f * ( (1 - x*x/r)*uf[0] - x*y/r * vf[0] );
             float ui = f * ( (1 - x*x/r)*uf[1] - x*y/r * vf[1] );
             float vr = f * ( -y*x/r * uf[0] + (1 - y*y/r)*vf[0] );
             float vi = f * ( -y*x/r * uf[1] + (1 - y*y/r)*vf[1] );
 
-            // Update the original arrays
-            (&(u0[i + N*j]))[0] = ur;
-            (&(u0[i + N*j]))[1] = ui;
-            (&(v0[i + N*j]))[0] = vr;
-            (&(v0[i + N*j]))[1] = vi;
+            (&(u0[2*(i + N*j)]))[0] = ur;
+            (&(u0[2*(i + N*j)]))[1] = ui;
+            (&(v0[2*(i + N*j)]))[0] = vr;
+            (&(v0[2*(i + N*j)]))[1] = vi;
         }
     }
-
-    // memset(u0,0,sizeof(float)*N*N*2);
-    // memset(v0,0,sizeof(float)*N*N*2);
-
-    // for ( i=0 ; i<=N ; i+=2 ) {
-    //     x = 0.5*i;
-    //     for ( j=0 ; j<N ; j++ ) {
-    //         y = j<=N/2 ? j : j-N;
-    //         r = x*x+y*y;
-    //         if ( r==0.0 ) continue;
-    //         f = exp(-r*dt*visc); // filter
-    //         U[0] = u0[i  +(N+2)*j]; V[0] = v0[i  +(N+2)*j];
-    //         U[1] = u0[i+1+(N+2)*j]; V[1] = v0[i+1+(N+2)*j]; // transformed complex vector (U,V)
-    //         u0[i  +(N+2)*j] = f*( (1-x*x/r)*U[0]     -x*y/r *V[0] );
-    //         u0[i+1+(N+2)*j] = f*( (1-x*x/r)*U[1]     -x*y/r *V[1] );
-    //         v0[i+  (N+2)*j] = f*(   -y*x/r *U[0] + (1-y*y/r)*V[0] );
-    //         v0[i+1+(N+2)*j] = f*(   -y*x/r *U[1] + (1-y*y/r)*V[1] ); // apply filter & project
-    //     }
-    // }
 
     // inverse ffts back to spatial domain
     TIMER_ACCUMULATION_START(); // debug code
